@@ -25,6 +25,10 @@ class KSUID(cyksuid.ksuid.KSUID):
         data = cyksuid.ksuid.parse(data)
         return KSUID(data.bytes)
 
+    ###
+    ### pydantic model functions
+    ###
+    
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -47,6 +51,24 @@ class KSUID(cyksuid.ksuid.KSUID):
             raise KSUIDError
 
         return v
+
+    ###
+    ### click custom type
+    ###
+    name = "ksuid"
+    def convert(self, value, param, ctx):
+        if isinstance(value, KSUID):
+            return value
+
+        try:
+            if isinstance(value, str):
+                value = KSUID.parse(v)
+            elif isinstance(value, (bytes, bytearray)):
+                value = KSUID(value)
+        except TypeError:
+            self.fail(f"{value!r} is not a valid ksuid", param, ctx)
+
+        return value
 
 class KSUIDError(PydanticTypeError):
     msg_template = 'value is not a valid ksuid'
